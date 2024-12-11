@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>音乐生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>音乐生成器</h1>
+        
+        <div class="form-group">
+            <label for="sunoUrl">Suno 音乐链接：</label>
+            <input type="text" id="sunoUrl" placeholder="请输入 Suno 音乐链接">
+        </div>
+
+        <div class="form-group">
+            <label for="lyrics">歌词内容：</label>
+            <textarea id="lyrics" rows="4" placeholder="请输入歌词内容"></textarea>
+        </div>
+
+        <button onclick="generateMusic()">生成音乐</button>
+
+        <div class="loading" id="loading">
+            正在生成音乐，请稍候...
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <h3>生成结果</h3>
+            <audio id="audioPlayer" controls></audio>
+            <br>
+            <button onclick="downloadMusic()">下载音乐</button>
+        </div>
+
+        <div class="polished-lyrics" id="polishedLyrics" style="display: none;">
+            <h3>润色后的歌词</h3>
+            <div class="lyrics-content" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        async function generateMusic() {
+            const sunoUrl = document.getElementById('sunoUrl').value;
+            const lyrics = document.getElementById('lyrics').value;
+
+            if (!sunoUrl || !lyrics) {
+                showError('请填写所有必填字段');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+            hideResult();
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        suno_url: sunoUrl,
+                        lyrics: lyrics
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('生成失败');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    showResult(data.audio_url, data.polished_lyrics);
+                } else {
+                    showError(data.message || '生成失败');
+                }
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function downloadMusic() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioUrl = audioPlayer.src;
+            
+            const link = document.createElement('a');
+            link.href = audioUrl;
+            link.download = '生成的音乐.mp3';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function showResult(audioUrl, polishedLyrics) {
+            const resultDiv = document.getElementById('result');
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = audioUrl;
+            resultDiv.style.display = 'block';
+
+            // 显示润色后的歌词
+            const polishedLyricsDiv = document.getElementById('polishedLyrics');
+            const lyricsContent = polishedLyricsDiv.querySelector('.lyrics-content');
+            lyricsContent.textContent = polishedLyrics;
+            polishedLyricsDiv.style.display = 'block';
+        }
+
+        function hideResult() {
+            document.getElementById('result').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

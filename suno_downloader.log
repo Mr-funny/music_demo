@@ -1,0 +1,11 @@
+2024-12-10 19:52:55,591 - INFO - 开始下载音频: https://suno.com/song/2ff26d77-cf22-4dc5-9efe-6a20a8157312
+2024-12-10 19:52:56,914 - ERROR - 未找到音频元素
+2024-12-10 19:54:08,978 - INFO - 开始下载音频: https://suno.com/song/2ff26d77-cf22-4dc5-9efe-6a20a8157312
+2024-12-10 19:54:10,095 - INFO - 页面内容片段:
+2024-12-10 19:54:10,127 - ERROR - 未找到音频元素，页面结构:
+2024-12-10 19:55:03,031 - INFO - 开始下载音频: https://suno.com/song/2ff26d77-cf22-4dc5-9efe-6a20a8157312
+2024-12-10 19:55:04,154 - INFO - 页面内容片段:
+2024-12-10 19:55:04,994 - ERROR - 下载请求失败: 404 Client Error: Not Found for url: https://suno.com/api/songs/2ff26d77-cf22-4dc5-9efe-6a20a8157312
+2024-12-10 20:04:17,239 - INFO - 开始下载音频: https://suno.com/song/2ff26d77-cf22-4dc5-9efe-6a20a8157312
+2024-12-10 20:04:17,240 - INFO - 开始下载音频文件: https://cdn1.suno.ai/2ff26d77-cf22-4dc5-9efe-6a20a8157312.mp3
+2024-12-10 20:04:19,802 - INFO - 音频下载成功: downloads\suno_2ff26d77-cf22-4dc5-9efe-6a20a8157312.mp3
