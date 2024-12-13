@@ -1,3 +1,46 @@
+import os
+from dotenv import load_dotenv
+import logging
+
+# 设置日志级别
+logging.basicConfig(level=logging.DEBUG)
+
+# 打印当前目录
+current_dir = os.getcwd()
+print(f"Current directory: {current_dir}")
+
+# 显式指定 .env 文件路径
+env_path = os.path.join(current_dir, '.env')
+print(f"Loading .env from: {env_path}")
+
+# 加载环境变量
+try:
+    # 首先尝试使用 UTF-8 without BOM
+    load_dotenv(env_path, encoding='utf-8')
+except UnicodeDecodeError:
+    try:
+        # 尝试使用 UTF-8 with BOM
+        load_dotenv(env_path, encoding='utf-8-sig')
+    except UnicodeDecodeError:
+        try:
+            # 尝试使用 ANSI 编码
+            load_dotenv(env_path, encoding='cp1252')
+        except Exception as e:
+            logging.error(f"无法加载 .env 文件: {str(e)}")
+            raise
+
+# 检查环境变量
+api_key = os.getenv('MINIMAX_API_KEY')
+group_id = os.getenv('MINIMAX_GROUP_ID')
+
+print(f"API Key loaded: {api_key is not None}")
+print(f"Group ID loaded: {group_id is not None}")
+
+if not api_key:
+    raise ValueError("Missing MINIMAX_API_KEY in environment variables")
+if not group_id:
+    raise ValueError("Missing MINIMAX_GROUP_ID in environment variables")
+
 import requests
 import json
 import base64
@@ -10,6 +53,15 @@ from flask import Flask, request, jsonify, send_file, send_from_directory
 import asyncio
 import aiohttp
 from concurrent.futures import ThreadPoolExecutor
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
+
+# 验证环境变量是否加载成功
+api_key = os.getenv('MINIMAX_API_KEY')
+if not api_key:
+    print("Warning: MINIMAX_API_KEY not found in environment variables")
 
 # 配置日志处理器使用 utf-8 编码
 logging.basicConfig(
@@ -26,12 +78,14 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'downloads'
 
 class MusicGenerator:
-    def __init__(self, api_key):
+    def __init__(self):
         """
         初始化音乐生成器
-        :param api_key: API密钥
         """
-        self.api_key = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiJKSyIsIlVzZXJOYW1lIjoiSksiLCJBY2NvdW50IjoiIiwiU3ViamVjdElEIjoiMTg2MjA3MDMyNzczNjAyNTEwMCIsIlBob25lIjoiMTMxMTY3OTM3MjUiLCJHcm91cElEIjoiMTg2MjA3MDMyNzczMTgzMDc5NiIsIlBhZ2VOYW1lIjoiIiwiTWFpbCI6IiIsIkNyZWF0ZVRpbWUiOiIyMDI0LTEyLTEwIDExOjI1OjI1IiwiVG9rZW5UeXBlIjoxLCJpc3MiOiJtaW5pbWF4In0.Xheo0uYyQT_RezMZIncWqHKWhjJMP3nBoMgrW_A7gVCCvMUfsG0fExsjjGeAowt6AqVKaHLNLlTwB6nKEXBoYqymwdDBLa57Amd8vPLnYRBw1ql4pv3pVUkPAhAIACSkLS4Oqziz9XEFiLUARt6gR5kWknuzctSKVNsYZHnN0Yky5dwuNTXNr7Mpfcx9yc7Wk-VRvdSACsdBNw5FrCiJYzSN5nFddUUCv-HNxqgPN8fpfV2fgjSLpCy_hjvUF_woVm8MqXtAz-GVtJVOYLp84YJBscZo7qQSWyYDFsavRfyBkdXQQJTLq0Yoohr_WHgjBxBd-6PRrjOze4zSPap71g"
+        self.api_key = os.getenv('MINIMAX_API_KEY')
+        if not self.api_key:
+            raise ValueError("Missing MINIMAX_API_KEY in environment variables")
+            
         self.upload_url = "https://api.minimax.chat/v1/music_upload"
         self.generation_url = "https://api.minimax.chat/v1/music_generation"
         self.headers = {
@@ -207,7 +261,7 @@ class MusicGenerator:
                 if response.status_code == 200:
                     try:
                         # 尝试解析响应内容
-                        response_text = response.text.strip()  # 移除可能的空白字符
+                        response_text = response.text.strip()  # 移除可能的��白字符
                         if response_text:
                             result = json.loads(response_text)
                             if result and result.get("data") and result["data"].get("audio"):
@@ -322,9 +376,11 @@ class MusicGenerator:
             return None
 
 class LyricsPolisher:
-    def __init__(self, api_key, group_id):
-        self.api_key = api_key
-        self.group_id = group_id
+    def __init__(self):
+        self.api_key = os.getenv('MINIMAX_API_KEY')
+        self.group_id = os.getenv('MINIMAX_GROUP_ID')
+        if not self.api_key or not self.group_id:
+            raise ValueError("Missing required environment variables")
         self.url = "https://api.minimax.chat/v1/text/chatcompletion_v2"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -340,7 +396,7 @@ class LyricsPolisher:
             
             # 构建更清晰的 system prompt
             system_prompt = """你是一个专业的语义节奏大师。你的任务是：
-1. 分析输入歌词的语义
+1. 分析输入歌词语义
 2. 仅通过添加换行符来添加节奏和停顿：
    - 使用双换行符"\n"表示短停顿
    - 使用双换行符"\n\n"表示长停顿
@@ -386,10 +442,10 @@ class LyricsPolisher:
                     
                     # 获取润色后的歌词
                     if "choices" in result and len(result["choices"]) > 0:
-                        # 获取润色后的歌词并去除首尾空白字符
+                        # 获取润��后的歌词并去除首尾空白字符
                         polished_lyrics = result["choices"][0]["message"]["content"].strip()
                         
-                        # 直接在歌词前后添加##，不添加任何换行符
+                        # 直接在歌词前添加##，不添加任何换行符
                         final_lyrics = f"##" + polished_lyrics + "##"
                         
                         # 记录处理结果
@@ -424,16 +480,14 @@ async def generate():
             logging.error("缺少必要参数")
             return jsonify({
                 'success': False,
-                'message': '请提供完整的参数'
+                'message': '请供完整的参数'
             }), 400
 
         try:
-            api_key = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiJKSyIsIlVzZXJOYW1lIjoiSksiLCJBY2NvdW50IjoiIiwiU3ViamVjdElEIjoiMTg2MjA3MDMyNzczNjAyNTEwMCIsIlBob25lIjoiMTMxMTY3OTM3MjUiLCJHcm91cElEIjoiMTg2MjA3MDMyNzczMTgzMDc5NiIsIlBhZ2VOYW1lIjoiIiwiTWFpbCI6IiIsIkNyZWF0ZVRpbWUiOiIyMDI0LTEyLTEwIDExOjI1OjI1IiwiVG9rZW5UeXBlIjoxLCJpc3MiOiJtaW5pbWF4In0.Xheo0uYyQT_RezMZIncWqHKWhjJMP3nBoMgrW_A7gVCCvMUfsG0fExsjjGeAowt6AqVKaHLNLlTwB6nKEXBoYqymwdDBLa57Amd8vPLnYRBw1ql4pv3pVUkPAhAIACSkLS4Oqziz9XEFiLUARt6gR5kWknuzctSKVNsYZHnN0Yky5dwuNTXNr7Mpfcx9yc7Wk-VRvdSACsdBNw5FrCiJYzSN5nFddUUCv-HNxqgPN8fpfV2fgjSLpCy_hjvUF_woVm8MqXtAz-GVtJVOYLp84YJBscZo7qQSWyYDFsavRfyBkdXQQJTLq0Yoohr_WHgjBxBd-6PRrjOze4zSPap71g"
-            group_id = "1862070327731830796"
+            # 直接创建实例，不传入 api_key
+            generator = MusicGenerator()
+            polisher = LyricsPolisher()
             
-            generator = MusicGenerator(api_key=api_key)
-            polisher = LyricsPolisher(api_key=api_key, group_id=group_id)
-
             # 1. 下载音频
             logging.info("开始下载音频")
             downloaded_file = await generator.download_suno_audio(suno_url)

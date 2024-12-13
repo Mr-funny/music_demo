@@ -2,106 +2,209 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>音乐生成器</title>
+    <title>AI音乐创作室</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #2D3436;
+            --accent-color: #00B894;
+            --bg-color: #F8F9FA;
+            --text-color: #2D3436;
+            --border-radius: 12px;
+            --shadow: 0 8px 30px rgba(0,0,0,0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
 
         .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: var(--primary-color);
+            text-align: center;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            font-size: 0.95em;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: var(--primary-color);
         }
 
         input[type="text"], textarea {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            padding: 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
         }
 
-        button {
-            background-color: #4CAF50;
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,184,148,0.1);
+        }
+
+        .btn {
+            background-color: var(--accent-color);
             color: white;
-            padding: 10px 20px;
+            padding: 15px 30px;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
         }
 
-        button:hover {
-            background-color: #45a049;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,184,148,0.2);
         }
 
         .loading {
             display: none;
+            text-align: center;
             margin: 20px 0;
+            color: var(--accent-color);
+            font-weight: 500;
         }
 
         .result {
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
             display: none;
         }
 
         .error {
-            color: red;
-            margin-top: 10px;
+            color: #FF6B6B;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            background-color: rgba(255,107,107,0.1);
+            margin-top: 20px;
             display: none;
+        }
+
+        audio {
+            width: 100%;
+            margin: 20px 0;
+            border-radius: var(--border-radius);
+        }
+
+        .polished-lyrics {
+            background: #F8F9FA;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+        }
+
+        .lyrics-content {
+            white-space: pre-wrap;
+            font-size: 0.95em;
+            line-height: 1.8;
+            color: #4A4A4A;
+        }
+
+        .result-title {
+            font-size: 1.2em;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .download-btn {
+            background-color: white;
+            color: var(--accent-color);
+            border: 2px solid var(--accent-color);
+            margin-top: 15px;
+        }
+
+        .download-btn:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>音乐生成器</h1>
-        
-        <div class="form-group">
-            <label for="sunoUrl">Suno 音乐链接：</label>
-            <input type="text" id="sunoUrl" placeholder="请输入 Suno 音乐链接">
+        <div class="card">
+            <h1>AI音乐创作室</h1>
+            
+            <div class="form-group">
+                <label for="sunoUrl">音乐参考链接</label>
+                <input type="text" id="sunoUrl" placeholder="请输入 Suno 音乐链接">
+            </div>
+
+            <div class="form-group">
+                <label for="lyrics">创作歌词</label>
+                <textarea id="lyrics" rows="6" placeholder="请输入您想要谱写的歌词..."></textarea>
+            </div>
+
+            <button class="btn" onclick="generateMusic()">开始创作</button>
+
+            <div class="loading" id="loading">
+                <div>正在创作您的音乐...</div>
+            </div>
+
+            <div class="error" id="error"></div>
         </div>
 
-        <div class="form-group">
-            <label for="lyrics">歌词内容：</label>
-            <textarea id="lyrics" rows="4" placeholder="请输入歌词内容"></textarea>
-        </div>
-
-        <button onclick="generateMusic()">生成音乐</button>
-
-        <div class="loading" id="loading">
-            正在生成音乐，请稍候...
-        </div>
-
-        <div class="error" id="error"></div>
-
-        <div class="result" id="result">
-            <h3>生成结果</h3>
+        <div class="card result" id="result">
+            <div class="result-title">创作成果</div>
             <audio id="audioPlayer" controls></audio>
-            <br>
-            <button onclick="downloadMusic()">下载音乐</button>
+            <button class="btn download-btn" onclick="downloadMusic()">下载作品</button>
         </div>
 
-        <div class="polished-lyrics" id="polishedLyrics" style="display: none;">
-            <h3>润色后的歌词</h3>
-            <div class="lyrics-content" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px;"></div>
+        <div class="card polished-lyrics" id="polishedLyrics" style="display: none;">
+            <div class="result-title">优化后的歌词</div>
+            <div class="lyrics-content"></div>
         </div>
     </div>
 
