@@ -103,3 +103,6 @@ music_DEMO/
 你的名字 - [@你的推特](https://x.com/7cnKSdFv66650A7)
 
 项目链接: [https://github.com/Mr-funny/music_demo]
+
+
+一点代码都不会的产品经理的第一个小项目，很有成就感。
